@@ -2,6 +2,7 @@ import { ScrappedData } from "../models/scrapped.model.js";
 import { asyncHandler } from "../utility/asyncHandler.js";
 import { ApiResponse } from "../utility/apiResponse.js";
 import { ApiError } from "../utility/apiError.js";
+import Error from "../models/error.model.js";
 
 const getScrappedData = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;

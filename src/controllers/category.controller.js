@@ -30,4 +30,51 @@ const getCategory = asyncHandler(async (req, res) => {
   );
 });
 
-export { createCategory, getCategory }
+const getNextCategory = async (req, res) => {
+  const deviceId = req.query.deviceId;
+
+  try {
+    const category = await Category.findOneAndUpdate(
+      {
+        isLocked: false,
+        lockedBy: null,
+      },
+      {
+        isLocked: true,
+        lockedBy: deviceId,
+        lockedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!category) {
+      return res.json({ success: false, message: "No available categories." });
+    }
+
+    res.json({ success: true, data: category });
+  } catch (err) {
+    console.error("Error fetching next category:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const unlockCategory = async (req, res) => {
+  const { categoryId, deviceId } = req.body;
+
+  try {
+    await Category.findOneAndUpdate(
+      { _id: categoryId, lockedBy: deviceId },
+      {
+        isLocked: false,
+        lockedBy: null,
+        lockedAt: null,
+      }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+};
+
+export { createCategory, getCategory, getNextCategory, unlockCategory }
