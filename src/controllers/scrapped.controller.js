@@ -3,6 +3,7 @@ import { asyncHandler } from "../utility/asyncHandler.js";
 import { ApiResponse } from "../utility/apiResponse.js";
 import { ApiError } from "../utility/apiError.js";
 import Error from "../models/error.model.js";
+import Category from "../models/category.model.js";
 
 const getScrappedData = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
@@ -31,7 +32,7 @@ const getScrappedData = asyncHandler(async (req, res) => {
 });
 
 const addScrappedData = asyncHandler(async (req, res) => {
-  const { url, data } = req.body;
+  const { url, deviceId, data } = req.body;
 
   if (!url) {
     throw new ApiError(400, "URL is required");
@@ -48,6 +49,17 @@ const addScrappedData = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, null, "Scrapped data updated successfully"));
   }
+
+  const category = await Category.findOne({
+    isLocked: true,
+    lockedBy: deviceId,
+  })
+
+  if(category) {
+    data.category = category.categoryName;
+  }
+
+  data.deviceId = deviceId;
 
   const scrappedData = new ScrappedData({ url, data });
   await scrappedData.save();
