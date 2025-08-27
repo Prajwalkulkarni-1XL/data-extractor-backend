@@ -5,6 +5,6 @@ const router = Router();
 
 router.route("/").get(getCategory);
 router.route("/next").get(getNextCategory);
-router.route("/unlock").get(unlockCategory);
+router.route("/unlock").post(unlockCategory);
 
 export default router;

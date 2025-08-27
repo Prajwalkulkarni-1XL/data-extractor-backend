@@ -59,15 +59,13 @@ const getNextCategory = async (req, res) => {
 };
 
 const unlockCategory = async (req, res) => {
-  const { categoryId, deviceId } = req.body;
+  const { deviceId, categoryId } = req.body;
 
   try {
     await Category.findOneAndUpdate(
-      { _id: categoryId, lockedBy: deviceId },
+      { lockedBy: deviceId, _id: categoryId, isLocked: true },
       {
         isLocked: false,
-        lockedBy: null,
-        lockedAt: null,
       }
     );
 
