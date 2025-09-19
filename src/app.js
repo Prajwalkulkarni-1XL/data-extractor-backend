@@ -12,18 +12,16 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 //routes import
-import scrapDataRouter from "./routes/scrapped.route.js";
-import settingRouter from "./routes/setting.route.js";
+import propertyRouter from "./routes/property.route.js";
 import errorController from "./controllers/error.controller.js";
 import categoryRouter from "./routes/category.route.js";
 
-import errorRouter from "./routes/error.route.js";
+import errorRouter from "./routes/errorLog.route.js";
 
 //routes declaration
-app.use("/api/scrapData", scrapDataRouter);
-app.use("/api/category", categoryRouter)
-app.use("/api/err", errorRouter);
-app.use("/api/setting", settingRouter)
+app.use("/api/property/:websiteKey", propertyRouter);
+app.use("/api/category/:websiteKey", categoryRouter)
+app.use("/api/error/:websiteKey", errorRouter);
 app.get("/api/healthcheck", (req, res) => {
   res.status(200).json({
     status: "success",

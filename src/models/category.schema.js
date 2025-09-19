@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const categorySchema = new mongoose.Schema({
     categoryName: String,
-    categoryURL: String,
+    categoryUrl: String,
     isLocked: {
         type: Boolean,
         default: false,
@@ -19,6 +19,4 @@ const categorySchema = new mongoose.Schema({
     timestamps: true,
 });
 
-const Category = mongoose.model("Category", categorySchema);
-
-export default Category;
+export default categorySchema;

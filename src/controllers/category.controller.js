@@ -1,78 +1,46 @@
-import Category from "../models/category.model.js";
+import categorySchema from "../models/category.schema.js";
 import { asyncHandler } from "../utility/asyncHandler.js";
-import { ApiResponse } from "../utility/apiResponse.js";
+import mongoose from "mongoose";
 
-const createCategory = async (req, res) => { }
+// Dynamic model generator
+const getCategoryModel = (websiteKey) => {
+  const normalizedKey = websiteKey.trim().toLowerCase();
+  const modelName = `category_${normalizedKey}`;
+  if (mongoose.models[modelName]) return mongoose.models[modelName];
+  return mongoose.model(modelName, categorySchema, modelName);
+};
 
-const getCategory = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1 } = req.query;
-  const skip = (page - 1) * limit;
+const getNextCategory = asyncHandler(async (req, res) => {
+  const { websiteKey } = req.params;
+  const { deviceId } = req.query;
 
-  const categories = await Category.find()
-    .skip(skip)
-    .limit(Number(limit))
-    .sort({ createdAt: -1 });
+  const Category = getCategoryModel(websiteKey);
 
-  const totalCount = await Category.countDocuments();
-  const totalPages = Math.ceil(totalCount / limit);
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        categories,
-        totalCount,
-        totalPages,
-        currentPage: Number(page),
-      },
-      "Categories data retrieved successfully"
-    )
+  const category = await Category.findOneAndUpdate(
+    { isLocked: false, lockedBy: null },
+    { isLocked: true, lockedBy: deviceId, lockedAt: new Date() },
+    { new: true }
   );
+
+  if (!category) {
+    return res.json({ success: false, message: "No available categories." });
+  }
+
+  res.json({ success: true, data: category });
 });
 
-const getNextCategory = async (req, res) => {
-  const deviceId = req.query.deviceId;
-
-  try {
-    const category = await Category.findOneAndUpdate(
-      {
-        isLocked: false,
-        lockedBy: null,
-      },
-      {
-        isLocked: true,
-        lockedBy: deviceId,
-        lockedAt: new Date(),
-      },
-      { new: true }
-    );
-
-    if (!category) {
-      return res.json({ success: false, message: "No available categories." });
-    }
-
-    res.json({ success: true, data: category });
-  } catch (err) {
-    console.error("Error fetching next category:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
-const unlockCategory = async (req, res) => {
+const unlockCategory = asyncHandler(async (req, res) => {
+  const { websiteKey } = req.params;
   const { deviceId, categoryId } = req.body;
 
-  try {
-    await Category.findOneAndUpdate(
-      { lockedBy: deviceId, _id: categoryId, isLocked: true },
-      {
-        isLocked: false,
-      }
-    );
+  const Category = getCategoryModel(websiteKey);
 
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-};
+  await Category.findOneAndUpdate(
+    { _id: categoryId, lockedBy: deviceId, isLocked: true },
+    { isLocked: false }
+  );
 
-export { createCategory, getCategory, getNextCategory, unlockCategory }
+  res.json({ success: true });
+});
+
+export { getNextCategory, unlockCategory }
