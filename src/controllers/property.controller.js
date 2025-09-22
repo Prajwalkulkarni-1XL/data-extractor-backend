@@ -22,6 +22,26 @@ const getCategoryModel = (websiteKey) => {
   return mongoose.model(modelName, categorySchema, modelName);
 };
 
+const createPropertyCollection = asyncHandler(async (req, res) => {
+  const { websiteKey } = req.params;
+
+  if (!websiteKey) {
+    return res
+      .status(400)
+      .json({ success: false, message: "websiteKey is required" });
+  }
+
+  const Property = getPropertyModel(websiteKey);
+
+  // Force collection creation
+  await Property.createCollection();
+
+  res.json({
+    success: true,
+    message: `Collection 'property_${websiteKey}' created successfully.`,
+  });
+});
+
 const addPropertyData = asyncHandler(async (req, res) => {
   const { websiteKey } = req.params;
   const { url, deviceId, data } = req.body;
@@ -34,7 +54,7 @@ const addPropertyData = asyncHandler(async (req, res) => {
   const Category = getCategoryModel(websiteKey);
 
   const existingData = await Property.findOne({ url });
-  
+
   if (existingData && existingData.data) {
     await ErrorLog.create({
       websiteKey,
@@ -64,4 +84,4 @@ const addPropertyData = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Property data added successfully"));
 });
 
-export { addPropertyData };
+export { addPropertyData, createPropertyCollection };

@@ -10,6 +10,61 @@ const getCategoryModel = (websiteKey) => {
   return mongoose.model(modelName, categorySchema, modelName);
 };
 
+const createCategoryCollection = asyncHandler(async (req, res) => {
+  const { websiteKey } = req.params;
+
+  const Category = getCategoryModel(websiteKey);
+
+  await Category.createCollection();
+
+  res.json({
+    success: true,
+    message: `Collection 'category_${websiteKey}' created successfully.`,
+  });
+});
+
+const addCategories = asyncHandler(async (req, res) => {
+  const { websiteKey } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "File is required" });
+  }
+
+  const Category = getCategoryModel(websiteKey);
+
+  let categories;
+  try {
+    categories = JSON.parse(req.file.buffer.toString("utf-8"));
+  } catch (err) {
+    return res.status(400).json({ success: false, message: "Invalid JSON file" });
+  }
+
+  if (!Array.isArray(categories)) {
+    return res.status(400).json({ success: false, message: "JSON must be an array" });
+  }
+
+  // Filter + clean
+  const validCategories = categories
+    .filter((c) => c.categoryName && c.categoryUrl)
+    .map((c) => ({
+      categoryName: c.categoryName.trim(),
+      categoryUrl: c.categoryUrl.trim(),
+    }));
+
+  if (!validCategories.length) {
+    return res.status(400).json({ success: false, message: "No valid categories found" });
+  }
+
+  // Insert, ignore duplicates
+  await Category.insertMany(validCategories, { ordered: false });
+
+  res.json({
+    success: true,
+    message: `${validCategories.length} categories added successfully`,
+  });
+});
+
+
 const getNextCategory = asyncHandler(async (req, res) => {
   const { websiteKey } = req.params;
   const { deviceId } = req.query;
@@ -43,4 +98,4 @@ const unlockCategory = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
-export { getNextCategory, unlockCategory }
+export { getNextCategory, unlockCategory, createCategoryCollection, addCategories }

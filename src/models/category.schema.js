@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 
 const categorySchema = new mongoose.Schema({
     categoryName: String,
-    categoryUrl: String,
+    categoryUrl: {
+        type: String,
+        unique: true,
+        required: true,
+    },
     isLocked: {
         type: Boolean,
         default: false,
