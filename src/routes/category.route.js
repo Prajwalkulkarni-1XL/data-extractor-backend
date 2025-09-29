@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getNextCategory, unlockCategory, createCategoryCollection, addCategories } from "../controllers/category.controller.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 const router = Router({ mergeParams: true })
 
