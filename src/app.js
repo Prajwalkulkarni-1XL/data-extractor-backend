@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { websiteKeyChecker } from "./middlewares/websiteKeyChecker.middleware.js";
 
 const app = express();
 
@@ -19,9 +20,9 @@ import categoryRouter from "./routes/category.route.js";
 import errorRouter from "./routes/errorLog.route.js";
 
 //routes declaration
-app.use("/api/property/:websiteKey", propertyRouter);
-app.use("/api/category/:websiteKey", categoryRouter)
-app.use("/api/error/:websiteKey", errorRouter);
+app.use("/api/property/:websiteKey", websiteKeyChecker, propertyRouter);
+app.use("/api/category/:websiteKey", websiteKeyChecker, categoryRouter)
+app.use("/api/error/:websiteKey", websiteKeyChecker, errorRouter);
 app.get("/api/healthcheck", (req, res) => {
   res.status(200).json({
     status: "success",
